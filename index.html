@@ -1,0 +1,49 @@
+<html>
+	<head>
+		<script src="libs/glMatrix-0.9.5.min.js"></script> 
+		<script src="libs/perlin.js"></script> 
+	    <script src="libs/jquery-3.3.1.min.js"></script>
+    	<script src="lib.js"></script>
+    	<script src="code.js"></script>
+		<link rel="stylesheet" type="text/css" href="style.css">
+	</head>
+	<script id="vertexShader" type="x-shader/x-fragment">
+		#include<libs/noise>
+
+		attribute vec2 position;
+		uniform float time;
+
+		varying vec3 vertexPosition;
+
+		void main(void) { 
+			vertexPosition = vec3(position, 0.0);
+			vec3 transform = vertexPosition*2.0-vec3(1.0, 1.0 , 0.0);
+			transform.y = -transform.y;
+			gl_Position = vec4(transform, 1.0);
+		}
+
+	</script>
+	<script id="fragmentShader" type="x-shader/x-fragment">
+		precision highp float;
+		uniform sampler2D sampler[2];
+		uniform float time;
+
+		#include<libs/noise>
+
+		varying vec3 vertexPosition;
+
+		void main(void) {
+			mediump vec4 grassSample = texture2D(sampler[0], vertexPosition.xy);
+			mediump vec4 sandSample = texture2D(sampler[1], vertexPosition.xy);
+			float scale = 8.0;
+			float velocity = 512.0;
+			float factor = myNoiseX(vertexPosition.x/scale, vertexPosition.y/scale, time/velocity);
+			factor = pow(clamp(factor*8.0,0.0,1.0), 4.0);
+
+			gl_FragColor = vec4(grassSample.xyz*(factor)+sandSample.xyz*(1.0-factor), 1.0);
+		}
+	</script>
+	<body>
+		<canvas id="visualization" width="750" height="750" ></canvas><br>
+	</body>
+</html>
